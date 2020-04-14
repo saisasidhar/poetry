@@ -19,7 +19,14 @@ test_task:
     - $PYTHON -m pip install pip -U
     - $PYTHON -m pip install poetry -U --pre
     - $PYTHON -m poetry config virtualenvs.in-project true
-  deps_script: $PYTHON -m poetry install
+    - $PYTHON -m poetry config --list
+  # todo: cache handling need to be fixed
+  venv_cache:
+    folder: ".venv"
+    fingerprint_script: echo freebsd-$($PYTHON -c "import sys; print('-'.join(str(v) for v in sys.version_info))")-$(sha512 poetry.lock)
+  deps_script: |
+    $PYTHON -m poetry run pip --version >/dev/null 2>&1 || rm -vrf .venv
+    $PYTHON -m poetry install
   test_script: $PYTHON -m poetry run pytest -q --junitxml=junit.xml tests
   on_failure:
     annotate_failure_artifacts:
